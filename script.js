@@ -382,18 +382,18 @@ class AudacityGame {
         } else if (action === 'set_balance') {
                 this.showSetBalanceModal(counter);
         } else if (action === 'add') {
-            this.socket.emit('update_balance', {
+            this.socket.emit('operation', {
+                operation: 'add',
                 counter: counter,
-                amount: value,
-                operation: 'add'
+                amount: value
             });
             this.showNotification(`Se sumaron $TDL ${value.toLocaleString()} al contador ${this.getCounterName(counter)}`, 'success');
         } else if (action === 'subtract') {
             if (this.balances[counter] >= value) {
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
+                    operation: 'subtract',
                     counter: counter,
-                    amount: value,
-                    operation: 'subtract'
+                    amount: value
                 });
                 this.showNotification(`Se restaron $TDL ${value.toLocaleString()} del contador ${this.getCounterName(counter)}`, 'success');
             } else {
@@ -626,7 +626,7 @@ class AudacityGame {
     resetAllBalances() {
         if (confirm('¿Estás seguro de que quieres reiniciar todos los saldos a $TDL 10,000?')) {
             this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} reinició todos los saldos a $TDL 10,000`);
-            this.socket.emit('update_balance', {
+            this.socket.emit('operation', {
                 operation: 'reset'
             });
             this.showNotification('Todos los saldos han sido reiniciados a $TDL 10,000', 'success');
@@ -685,7 +685,7 @@ class AudacityGame {
                 if (operation === 'transfer_to_bank') {
                     // Calcular el monto basado en el porcentaje
                     const transferAmount = (this.balances[counter] * amount) / 100;
-                    this.socket.emit('update_balance', {
+                    this.socket.emit('operation', {
                         counter: counter,
                         amount: transferAmount,
                         operation: 'deposit',
@@ -694,7 +694,7 @@ class AudacityGame {
                 } else if (operation === 'add_percentage_self') {
                     // Calcular el monto basado en el porcentaje del propio saldo
                     const addAmount = (this.balances[counter] * amount) / 100;
-                    this.socket.emit('update_balance', {
+                    this.socket.emit('operation', {
                         counter: counter,
                         amount: addAmount,
                         operation: 'add'
@@ -702,7 +702,7 @@ class AudacityGame {
                 } else if (operation === 'subtract_percentage_self') {
                     // Calcular el monto basado en el porcentaje del propio saldo
                     const subtractAmount = (this.balances[counter] * amount) / 100;
-                    this.socket.emit('update_balance', {
+                    this.socket.emit('operation', {
                         counter: counter,
                         amount: subtractAmount,
                         operation: 'subtract'
@@ -759,7 +759,7 @@ class AudacityGame {
 
     transferPercentage(fromCounter, toCounter, amount) {
         if (this.balances[fromCounter] >= amount) {
-            this.socket.emit('update_balance', {
+            this.socket.emit('operation', {
                 fromCounter: fromCounter,
                 toCounter: toCounter,
                 amount: amount,
@@ -807,7 +807,7 @@ class AudacityGame {
                 const fromAmount = this.balances[fromCounter];
                 const addAmount = Math.floor(fromAmount * (percentage / 100));
                 
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
                     counter: toCounter,
                     amount: this.balances[toCounter] + addAmount,
                     operation: 'set'
@@ -858,7 +858,7 @@ class AudacityGame {
                 const subtractAmount = Math.floor(fromAmount * (percentage / 100));
                 
                 if (this.balances[toCounter] >= subtractAmount) {
-                    this.socket.emit('update_balance', {
+                    this.socket.emit('operation', {
                         counter: toCounter,
                         amount: this.balances[toCounter] - subtractAmount,
                         operation: 'set'
@@ -904,13 +904,13 @@ class AudacityGame {
                 const fromAmount = this.balances[fromCounter];
                 const depositAmount = Math.floor(fromAmount * (percentage / 100));
                 
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
                     counter: fromCounter,
                     amount: this.balances[fromCounter] - depositAmount,
                     operation: 'set'
                 });
                 
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
                     counter: 'bank',
                     amount: this.balances.bank + depositAmount,
                     operation: 'set'
@@ -928,7 +928,7 @@ class AudacityGame {
     }
 
     duplicateBalance(counter) {
-        this.socket.emit('update_balance', {
+        this.socket.emit('operation', {
             counter: counter,
             amount: this.balances[counter] * 2,
             operation: 'set'
@@ -938,7 +938,7 @@ class AudacityGame {
 
     loseHalfBalance(counter) {
         const newAmount = Math.floor(this.balances[counter] / 2);
-        this.socket.emit('update_balance', {
+        this.socket.emit('operation', {
             counter: counter,
             amount: newAmount,
             operation: 'set'
@@ -965,7 +965,7 @@ class AudacityGame {
         document.getElementById('confirmSetBalanceBtn').addEventListener('click', () => {
             const newBalance = parseInt(document.getElementById('newBalance').value);
             if (newBalance >= 0) {
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
                     counter: counter,
                     amount: newBalance,
                     operation: 'set'
@@ -1002,7 +1002,7 @@ class AudacityGame {
             // Enviar cada cambio individualmente
             Object.keys(newBalances).forEach(counter => {
                 this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} estableció el saldo de ${this.getCounterName(counter)} en $TDL ${newBalances[counter].toLocaleString()}`);
-                this.socket.emit('update_balance', {
+                this.socket.emit('operation', {
                     counter: counter,
                     amount: newBalances[counter],
                     operation: 'set'
@@ -1029,7 +1029,7 @@ class AudacityGame {
             return;
         }
 
-        this.socket.emit('update_balance', {
+        this.socket.emit('operation', {
             fromCounter: fromCounter,
             toCounter: toCounter,
             operation: 'swap'
