@@ -87,6 +87,14 @@ class AudacityGame {
             this.resetAllBalances();
         });
 
+        document.getElementById('setAmountBtn').addEventListener('click', () => {
+            this.showSetAmountModal();
+        });
+
+        document.getElementById('divideBankBtn').addEventListener('click', () => {
+            this.showDivideBankModal();
+        });
+
         // Modal close
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', () => {
@@ -144,15 +152,35 @@ class AudacityGame {
         const actionsDiv = document.getElementById(`actions-${counter}`);
         actionsDiv.innerHTML = '';
 
-        // Botones básicos para todos los usuarios
-        this.createActionButton(actionsDiv, '➕ Sumar', 'add', counter);
-        this.createActionButton(actionsDiv, '➖ Restar', 'subtract', counter);
-        this.createActionButton(actionsDiv, '🎯 Establecer', 'set', counter);
+        // Verificar si el usuario puede operar en este contador
+        const canOperate = this.currentUser.role === 'admin' || 
+                          (this.currentUser.role === 'counter' && this.currentUser.counter === counter);
 
-        // Botones adicionales para admin
-        if (this.currentUser.role === 'admin') {
-            this.createActionButton(actionsDiv, '🔄 Duplicar', 'duplicate', counter);
-            this.createActionButton(actionsDiv, '✂️ Reducir a la mitad', 'halve', counter);
+        if (canOperate) {
+            // Botones básicos
+            this.createActionButton(actionsDiv, '➕ Sumar Monto', 'add', counter);
+            this.createActionButton(actionsDiv, '➖ Restar Monto', 'subtract', counter);
+            this.createActionButton(actionsDiv, '🎯 Establecer', 'set', counter);
+            
+            // Botones de porcentaje
+            this.createActionButton(actionsDiv, '📈 Sumar % de mi saldo', 'add_percentage', counter);
+            this.createActionButton(actionsDiv, '📉 Restar % de mi saldo', 'subtract_percentage', counter);
+            
+            // Botones de transferencia
+            this.createActionButton(actionsDiv, '🔄 Transferir a otra cuenta', 'transfer', counter);
+            this.createActionButton(actionsDiv, '🏦 Transferir al banco', 'transfer_to_bank', counter);
+
+            // Botones adicionales para admin
+            if (this.currentUser.role === 'admin') {
+                this.createActionButton(actionsDiv, '🔄 Duplicar', 'duplicate', counter);
+                this.createActionButton(actionsDiv, '✂️ Reducir a la mitad', 'halve', counter);
+            }
+        } else {
+            // Si no puede operar, mostrar mensaje
+            const message = document.createElement('div');
+            message.textContent = 'Solo puedes operar en tu contador';
+            message.style.cssText = 'color: #e74c3c; font-size: 12px; text-align: center; margin: 10px 0;';
+            actionsDiv.appendChild(message);
         }
     }
 
@@ -186,6 +214,45 @@ class AudacityGame {
                     <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Ejecutar</button>
                 `;
                 break;
+            case 'add_percentage':
+            case 'subtract_percentage':
+                html = `
+                    <div class="form-group">
+                        <label for="percentage">Porcentaje (1-100):</label>
+                        <input type="number" id="percentage" min="1" max="100" required>
+                    </div>
+                    <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Ejecutar</button>
+                `;
+                break;
+            case 'transfer':
+                html = `
+                    <div class="form-group">
+                        <label for="amount">Monto a transferir:</label>
+                        <input type="number" id="amount" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="targetCounter">Transferir a:</label>
+                        <select id="targetCounter" required>
+                            <option value="">Seleccionar cuenta</option>
+                            <option value="gallo">Gallo</option>
+                            <option value="leon">León</option>
+                            <option value="perro">Perro</option>
+                            <option value="mano">Mano</option>
+                            <option value="estrella">Estrella</option>
+                        </select>
+                    </div>
+                    <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Ejecutar</button>
+                `;
+                break;
+            case 'transfer_to_bank':
+                html = `
+                    <div class="form-group">
+                        <label for="percentage">Porcentaje a transferir al banco (1-100):</label>
+                        <input type="number" id="percentage" min="1" max="100" required>
+                    </div>
+                    <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Ejecutar</button>
+                `;
+                break;
             case 'duplicate':
             case 'halve':
                 html = `
@@ -201,6 +268,8 @@ class AudacityGame {
 
     performOperation(action, counter) {
         let amount = 0;
+        let percentage = 0;
+        let targetCounter = '';
         
         if (action === 'add' || action === 'subtract' || action === 'set') {
             amount = parseFloat(document.getElementById('amount').value);
@@ -208,14 +277,35 @@ class AudacityGame {
                 this.showNotification('Monto inválido', 'error');
                 return;
             }
+        } else if (action === 'add_percentage' || action === 'subtract_percentage' || action === 'transfer_to_bank') {
+            percentage = parseFloat(document.getElementById('percentage').value);
+            if (isNaN(percentage) || percentage < 1 || percentage > 100) {
+                this.showNotification('Porcentaje inválido (debe ser entre 1 y 100)', 'error');
+                return;
+            }
+        } else if (action === 'transfer') {
+            amount = parseFloat(document.getElementById('amount').value);
+            targetCounter = document.getElementById('targetCounter').value;
+            if (isNaN(amount) || amount < 0) {
+                this.showNotification('Monto inválido', 'error');
+                return;
+            }
+            if (!targetCounter) {
+                this.showNotification('Debe seleccionar una cuenta destino', 'error');
+                return;
+            }
         }
 
         // Enviar operación al servidor
-        this.socket.emit('operation', {
+        const operationData = {
             operation: action,
             counter: counter,
-            amount: amount
-        });
+            amount: amount,
+            percentage: percentage,
+            targetCounter: targetCounter
+        };
+
+        this.socket.emit('operation', operationData);
 
         // Cerrar modal
         document.getElementById('operationModal').style.display = 'none';
@@ -228,6 +318,125 @@ class AudacityGame {
                 counter: 'all'
             });
         }
+    }
+
+    showSetAmountModal() {
+        const modal = document.getElementById('operationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        modalTitle.textContent = 'ESTABLECER MONTOS ESPECÍFICOS';
+        
+        const html = `
+            <div class="form-group">
+                <label for="bankAmount">Banco Central:</label>
+                <input type="number" id="bankAmount" min="0" step="0.01" value="${this.balances.bank}">
+            </div>
+            <div class="form-group">
+                <label for="galloAmount">Gallo:</label>
+                <input type="number" id="galloAmount" min="0" step="0.01" value="${this.balances.gallo}">
+            </div>
+            <div class="form-group">
+                <label for="leonAmount">León:</label>
+                <input type="number" id="leonAmount" min="0" step="0.01" value="${this.balances.leon}">
+            </div>
+            <div class="form-group">
+                <label for="perroAmount">Perro:</label>
+                <input type="number" id="perroAmount" min="0" step="0.01" value="${this.balances.perro}">
+            </div>
+            <div class="form-group">
+                <label for="manoAmount">Mano:</label>
+                <input type="number" id="manoAmount" min="0" step="0.01" value="${this.balances.mano}">
+            </div>
+            <div class="form-group">
+                <label for="estrellaAmount">Estrella:</label>
+                <input type="number" id="estrellaAmount" min="0" step="0.01" value="${this.balances.estrella}">
+            </div>
+            <button onclick="game.setSpecificAmounts()" class="btn-primary">Establecer Montos</button>
+        `;
+
+        modalBody.innerHTML = html;
+        modal.style.display = 'block';
+    }
+
+    setSpecificAmounts() {
+        const amounts = {
+            bank: parseFloat(document.getElementById('bankAmount').value) || 0,
+            gallo: parseFloat(document.getElementById('galloAmount').value) || 0,
+            leon: parseFloat(document.getElementById('leonAmount').value) || 0,
+            perro: parseFloat(document.getElementById('perroAmount').value) || 0,
+            mano: parseFloat(document.getElementById('manoAmount').value) || 0,
+            estrella: parseFloat(document.getElementById('estrellaAmount').value) || 0
+        };
+
+        this.socket.emit('operation', {
+            operation: 'set_specific_amounts',
+            amounts: amounts
+        });
+
+        document.getElementById('operationModal').style.display = 'none';
+    }
+
+    showDivideBankModal() {
+        const modal = document.getElementById('operationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        modalTitle.textContent = 'DIVIDIR SALDO DEL BANCO';
+        
+        const html = `
+            <div class="form-group">
+                <label>Saldo actual del banco: $TDL ${this.balances.bank.toLocaleString()}</label>
+            </div>
+            <div class="form-group">
+                <label for="divideType">Tipo de división:</label>
+                <select id="divideType" onchange="game.toggleDivideOptions()">
+                    <option value="equal">Dividir en partes iguales</option>
+                    <option value="custom">Dividir monto específico</option>
+                </select>
+            </div>
+            <div id="customAmountDiv" class="form-group" style="display: none;">
+                <label for="customAmount">Monto a dividir:</label>
+                <input type="number" id="customAmount" min="0" step="0.01" max="${this.balances.bank}">
+            </div>
+            <button onclick="game.divideBank()" class="btn-primary">Dividir</button>
+        `;
+
+        modalBody.innerHTML = html;
+        modal.style.display = 'block';
+    }
+
+    toggleDivideOptions() {
+        const divideType = document.getElementById('divideType').value;
+        const customAmountDiv = document.getElementById('customAmountDiv');
+        
+        if (divideType === 'custom') {
+            customAmountDiv.style.display = 'block';
+        } else {
+            customAmountDiv.style.display = 'none';
+        }
+    }
+
+    divideBank() {
+        const divideType = document.getElementById('divideType').value;
+        let amount = 0;
+
+        if (divideType === 'equal') {
+            amount = this.balances.bank;
+        } else {
+            amount = parseFloat(document.getElementById('customAmount').value);
+            if (isNaN(amount) || amount < 0 || amount > this.balances.bank) {
+                this.showNotification('Monto inválido', 'error');
+                return;
+            }
+        }
+
+        this.socket.emit('operation', {
+            operation: 'divide_bank',
+            amount: amount
+        });
+
+        document.getElementById('operationModal').style.display = 'none';
     }
 
     updateBalances() {

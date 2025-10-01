@@ -220,23 +220,27 @@ io.on('connection', (socket) => {
                     newBalances[counter] = amount;
                     operationDescription = `Estableció $TDL ${amount} en ${counter}`;
                     break;
+                case 'add_percentage':
+                    const addPercentageAmount = (newBalances[counter] * percentage) / 100;
+                    newBalances[counter] += addPercentageAmount;
+                    operationDescription = `Sumó ${percentage}% (${addPercentageAmount}) de su saldo a ${counter}`;
+                    break;
+                case 'subtract_percentage':
+                    const subtractPercentageAmount = (newBalances[counter] * percentage) / 100;
+                    newBalances[counter] = Math.max(0, newBalances[counter] - subtractPercentageAmount);
+                    operationDescription = `Restó ${percentage}% (${subtractPercentageAmount}) de su saldo de ${counter}`;
+                    break;
                 case 'transfer':
                     const transferAmount = Math.min(amount, newBalances[counter]);
                     newBalances[counter] -= transferAmount;
                     newBalances[targetCounter] += transferAmount;
                     operationDescription = `Transfirió $TDL ${transferAmount} de ${counter} a ${targetCounter}`;
                     break;
-                case 'transfer_percentage':
-                    const percentageAmount = (newBalances[counter] * percentage) / 100;
-                    newBalances[counter] -= percentageAmount;
-                    newBalances[targetCounter] += percentageAmount;
-                    operationDescription = `Transfirió ${percentage}% (${percentageAmount}) de ${counter} a ${targetCounter}`;
-                    break;
-                case 'deposit_to_bank':
-                    const depositAmount = (newBalances[counter] * percentage) / 100;
-                    newBalances[counter] -= depositAmount;
-                    newBalances.bank += depositAmount;
-                    operationDescription = `Depositó ${percentage}% (${depositAmount}) de ${counter} al banco`;
+                case 'transfer_to_bank':
+                    const transferToBankAmount = (newBalances[counter] * percentage) / 100;
+                    newBalances[counter] -= transferToBankAmount;
+                    newBalances.bank += transferToBankAmount;
+                    operationDescription = `Transfirió ${percentage}% (${transferToBankAmount}) de ${counter} al banco`;
                     break;
                 case 'duplicate':
                     newBalances[counter] *= 2;
@@ -246,11 +250,20 @@ io.on('connection', (socket) => {
                     newBalances[counter] = Math.floor(newBalances[counter] / 2);
                     operationDescription = `Redujo a la mitad el saldo de ${counter}`;
                     break;
-                case 'swap':
-                    const temp = newBalances[counter];
-                    newBalances[counter] = newBalances[targetCounter];
-                    newBalances[targetCounter] = temp;
-                    operationDescription = `Intercambió saldos entre ${counter} y ${targetCounter}`;
+                case 'set_specific_amounts':
+                    newBalances = { ...newBalances, ...data.amounts };
+                    operationDescription = 'Estableció montos específicos para todas las cuentas';
+                    break;
+                case 'divide_bank':
+                    const divideAmount = data.amount;
+                    const perCounter = divideAmount / 5; // Dividir entre 5 contadores
+                    newBalances.bank -= divideAmount;
+                    newBalances.gallo += perCounter;
+                    newBalances.leon += perCounter;
+                    newBalances.perro += perCounter;
+                    newBalances.mano += perCounter;
+                    newBalances.estrella += perCounter;
+                    operationDescription = `Dividió $TDL ${divideAmount} del banco entre todos los contadores`;
                     break;
                 case 'reset_all':
                     newBalances = {
