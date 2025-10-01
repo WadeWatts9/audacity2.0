@@ -91,6 +91,10 @@ class AudacityGame {
             this.showSetAmountModal();
         });
 
+        document.getElementById('setBankBtn').addEventListener('click', () => {
+            this.showSetBankModal();
+        });
+
         document.getElementById('divideBankBtn').addEventListener('click', () => {
             this.showDivideBankModal();
         });
@@ -359,6 +363,28 @@ class AudacityGame {
         modal.style.display = 'block';
     }
 
+    showSetBankModal() {
+        const modal = document.getElementById('operationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        modalTitle.textContent = 'ESTABLECER SALDO DEL BANCO';
+        
+        const html = `
+            <div class="form-group">
+                <label>Saldo actual del banco: $TDL ${this.balances.bank.toLocaleString()}</label>
+            </div>
+            <div class="form-group">
+                <label for="newBankAmount">Nuevo saldo del banco:</label>
+                <input type="number" id="newBankAmount" min="0" step="0.01" value="${this.balances.bank}" required>
+            </div>
+            <button onclick="game.setBankAmount()" class="btn-primary">Establecer Saldo del Banco</button>
+        `;
+
+        modalBody.innerHTML = html;
+        modal.style.display = 'block';
+    }
+
     setSpecificAmounts() {
         const amounts = {
             bank: parseFloat(document.getElementById('bankAmount').value) || 0,
@@ -372,6 +398,22 @@ class AudacityGame {
         this.socket.emit('operation', {
             operation: 'set_specific_amounts',
             amounts: amounts
+        });
+
+        document.getElementById('operationModal').style.display = 'none';
+    }
+
+    setBankAmount() {
+        const newBankAmount = parseFloat(document.getElementById('newBankAmount').value);
+        
+        if (isNaN(newBankAmount) || newBankAmount < 0) {
+            this.showNotification('Monto inválido', 'error');
+            return;
+        }
+
+        this.socket.emit('operation', {
+            operation: 'set_bank_amount',
+            amount: newBankAmount
         });
 
         document.getElementById('operationModal').style.display = 'none';

@@ -254,6 +254,10 @@ io.on('connection', (socket) => {
                     newBalances = { ...newBalances, ...data.amounts };
                     operationDescription = 'Estableció montos específicos para todas las cuentas';
                     break;
+                case 'set_bank_amount':
+                    newBalances.bank = data.amount;
+                    operationDescription = `Estableció el saldo del banco a $TDL ${data.amount}`;
+                    break;
                 case 'divide_bank':
                     const divideAmount = data.amount;
                     const perCounter = divideAmount / 5; // Dividir entre 5 contadores
