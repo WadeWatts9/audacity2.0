@@ -1,0 +1,20 @@
+{
+  "name": "audacity-contador",
+  "version": "1.0.0",
+  "description": "Sistema de contadores AUDACITY con tiempo real",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["audacity", "contadores", "tiempo-real", "websockets"],
+  "author": "Alan Canto",
+  "license": "MIT"
+}

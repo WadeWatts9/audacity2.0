@@ -1,0 +1,40 @@
+RewriteEngine On
+
+# Redirigir todas las peticiones a la aplicación Node.js
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+
+# Configuración para WebSockets
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^(.*)$ ws://localhost:3000/$1 [P,L]
+
+# Forzar el uso del dominio correcto en la barra de direcciones
+# Redirigir cualquier IP o dominio incorrecto al dominio correcto
+RewriteCond %{HTTP_HOST} !^audacity\.alancanto\.net$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.audacity\.alancanto\.net$ [NC]
+RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
+RewriteRule ^(.*)$ https://audacity.alancanto.net/$1 [R=301,L]
+
+# Redirigir HTTP a HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Headers para CORS
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Configuración de caché para archivos estáticos
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
+
+# Configuración de seguridad
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
