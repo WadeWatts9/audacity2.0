@@ -246,6 +246,11 @@ io.on('connection', (socket) => {
                     newBalances[counter] *= 2;
                     operationDescription = `Duplicó el saldo de ${counter}`;
                     break;
+                case 'divide':
+                    const divideBy = data.divideBy || 2;
+                    newBalances[counter] = Math.floor(newBalances[counter] / divideBy);
+                    operationDescription = `Dividió el saldo de ${counter} entre ${divideBy}`;
+                    break;
                 case 'halve':
                     newBalances[counter] = Math.floor(newBalances[counter] / 2);
                     operationDescription = `Redujo a la mitad el saldo de ${counter}`;

@@ -174,9 +174,12 @@ class AudacityGame {
             this.createActionButton(actionsDiv, '🔄 Transferir % a otra cuenta', 'transfer', counter);
             this.createActionButton(actionsDiv, '🏦 Transferir % al banco', 'transfer_to_bank', counter);
 
+            // Botones de duplicar y dividir saldo
+            this.createActionButton(actionsDiv, '🔄 Duplicar saldo', 'duplicate', counter);
+            this.createActionButton(actionsDiv, '✂️ Dividir saldo', 'divide', counter);
+
             // Botones adicionales para admin
             if (this.currentUser.role === 'admin') {
-                this.createActionButton(actionsDiv, '🔄 Duplicar', 'duplicate', counter);
                 this.createActionButton(actionsDiv, '✂️ Reducir a la mitad', 'halve', counter);
             }
         } else {
@@ -264,6 +267,16 @@ class AudacityGame {
                     <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Confirmar</button>
                 `;
                 break;
+            case 'divide':
+                html = `
+                    <div class="form-group">
+                        <label for="divideBy">Dividir saldo entre:</label>
+                        <input type="number" id="divideBy" min="2" max="100" value="2" required>
+                        <small>El saldo actual se dividirá entre este número</small>
+                    </div>
+                    <button onclick="game.performOperation('${action}', '${counter}')" class="btn-primary">Dividir Saldo</button>
+                `;
+                break;
         }
 
         modalBody.innerHTML = html;
@@ -274,6 +287,7 @@ class AudacityGame {
         let amount = 0;
         let percentage = 0;
         let targetCounter = '';
+        let divideBy = 0;
         
         if (action === 'add' || action === 'subtract' || action === 'set') {
             amount = parseFloat(document.getElementById('amount').value);
@@ -298,6 +312,12 @@ class AudacityGame {
                 this.showNotification('Debe seleccionar una cuenta destino', 'error');
                 return;
             }
+        } else if (action === 'divide') {
+            divideBy = parseFloat(document.getElementById('divideBy').value);
+            if (isNaN(divideBy) || divideBy < 2 || divideBy > 100) {
+                this.showNotification('Número inválido (debe ser entre 2 y 100)', 'error');
+                return;
+            }
         }
 
         // Enviar operación al servidor
@@ -306,7 +326,8 @@ class AudacityGame {
             counter: counter,
             amount: amount,
             percentage: percentage,
-            targetCounter: targetCounter
+            targetCounter: targetCounter,
+            divideBy: divideBy
         };
 
         this.socket.emit('operation', operationData);
