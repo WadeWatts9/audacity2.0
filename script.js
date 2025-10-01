@@ -23,7 +23,13 @@ class AudacityGame {
         this.currentUser = null;
         this.socket = null;
         this.operations = [];
-        this.operationLocks = {};
+        this.operationLocks = {
+            gallo: null,
+            leon: null,
+            perro: null,
+            mano: null,
+            estrella: null
+        };
         this.globalLock = {
             isLocked: false,
             lockedBy: null,
@@ -61,7 +67,7 @@ class AudacityGame {
         // Escuchar actualizaciones de bloqueos
         this.socket.on('locks_update', (locks) => {
             console.log('🔒 Recibida actualización de bloqueos:', locks);
-            this.operationLocks = locks;
+            this.operationLocks = locks.operationLocks || locks;
             this.updateLockStatus();
         });
 
@@ -452,7 +458,7 @@ class AudacityGame {
         
         counters.forEach(counter => {
             const lockElement = document.getElementById(`lock-${counter}`);
-            const isLocked = this.operationLocks[counter] !== null;
+            const isLocked = this.operationLocks && this.operationLocks[counter] !== null;
             
             if (isLocked) {
                 const lockedBy = this.operationLocks[counter];
