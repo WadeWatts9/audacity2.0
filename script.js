@@ -222,10 +222,10 @@ class AudacityGame {
             // Notificar al servidor sobre el login
             this.socket.emit('user_login', this.currentUser);
             
-            this.logOperation(`Usuario ${this.currentUser.name} inició sesión`);
+            this.logOperation(`Usuario ${this.currentUser ? this.currentUser.name : 'Usuario'} inició sesión`);
             this.showGameScreen();
             this.setupUserInterface();
-            this.showNotification(`Bienvenido, ${this.currentUser.name}`, 'success');
+            this.showNotification(`Bienvenido, ${this.currentUser ? this.currentUser.name : 'Usuario'}`, 'success');
         } else {
             errorDiv.textContent = 'Usuario o contraseña incorrectos';
             errorDiv.style.display = 'block';
@@ -259,10 +259,10 @@ class AudacityGame {
         const userWelcomeElement = document.getElementById('userWelcome');
         if (userWelcomeElement) {
             if (this.currentUser.role === 'admin') {
-                userWelcomeElement.textContent = `Bienvenido, Administrador ${this.currentUser.username}`;
+                userWelcomeElement.textContent = `Bienvenido, Administrador ${this.currentUser ? this.currentUser.username : 'Usuario'}`;
             } else {
                 const counterName = this.getCounterName(this.currentUser.counter);
-                userWelcomeElement.textContent = `Bienvenido, ${this.currentUser.username} (${counterName})`;
+                userWelcomeElement.textContent = `Bienvenido, ${this.currentUser ? this.currentUser.username : 'Usuario'} (${counterName})`;
             }
         }
         
@@ -408,7 +408,7 @@ class AudacityGame {
             this.socket.emit('start_operations', {
                 counter: counter
             });
-            this.logOperation(`${this.currentUser.name} inició operaciones en ${this.getCounterName(counter)}`);
+            this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} inició operaciones en ${this.getCounterName(counter)}`);
         }
     }
 
@@ -417,7 +417,7 @@ class AudacityGame {
             this.socket.emit('end_operations', {
                 counter: counter
             });
-            this.logOperation(`${this.currentUser.name} finalizó operaciones en ${this.getCounterName(counter)}`);
+            this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} finalizó operaciones en ${this.getCounterName(counter)}`);
         }
     }
 
@@ -428,7 +428,7 @@ class AudacityGame {
     }
 
     startGlobalOperations() {
-        if (this.globalLock.isLocked && this.globalLock.lockedBy !== this.currentUser.username) {
+        if (this.globalLock.isLocked && this.currentUser && this.globalLock.lockedBy !== this.currentUser.username) {
             this.showNotification(`El sistema está siendo usado por ${this.globalLock.lockedBy}`, 'error');
             return;
         }
@@ -438,7 +438,7 @@ class AudacityGame {
     }
 
     endGlobalOperations() {
-        if (!this.globalLock.isLocked || this.globalLock.lockedBy !== this.currentUser.username) {
+        if (!this.globalLock.isLocked || (this.currentUser && this.globalLock.lockedBy !== this.currentUser.username)) {
             this.showNotification('No tienes operaciones globales activas', 'error');
             return;
         }
@@ -456,12 +456,12 @@ class AudacityGame {
             
             if (isLocked) {
                 const lockedBy = this.operationLocks[counter];
-                const isLockedByMe = lockedBy === this.currentUser.username;
+                const isLockedByMe = this.currentUser && lockedBy === this.currentUser.username;
                 
                 // Obtener nombre más descriptivo
                 let displayName = 'Usuario desconocido';
                 if (lockedBy) {
-                    if (lockedBy === this.currentUser.username) {
+                    if (this.currentUser && lockedBy === this.currentUser.username) {
                         displayName = 'Tú';
                     } else if (lockedBy.startsWith('contador_')) {
                         const counterName = this.getCounterName(lockedBy.replace('contador_', ''));
@@ -495,7 +495,7 @@ class AudacityGame {
         const globalLockElement = document.getElementById('global-lock-status');
         if (globalLockElement) {
             if (this.globalLock.isLocked) {
-                const isCurrentUser = this.globalLock.lockedBy === this.currentUser.username;
+                const isCurrentUser = this.currentUser && this.globalLock.lockedBy === this.currentUser.username;
                 globalLockElement.innerHTML = `
                     <div class="global-lock-indicator ${isCurrentUser ? 'locked-by-me' : 'locked-by-other'}">
                         <i class="fas fa-globe"></i>
@@ -625,7 +625,7 @@ class AudacityGame {
 
     resetAllBalances() {
         if (confirm('¿Estás seguro de que quieres reiniciar todos los saldos a $TDL 10,000?')) {
-            this.logOperation(`${this.currentUser.name} reinició todos los saldos a $TDL 10,000`);
+            this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} reinició todos los saldos a $TDL 10,000`);
             this.socket.emit('update_balance', {
                 operation: 'reset'
             });
@@ -1001,7 +1001,7 @@ class AudacityGame {
         if (hasChanges) {
             // Enviar cada cambio individualmente
             Object.keys(newBalances).forEach(counter => {
-                this.logOperation(`${this.currentUser.name} estableció el saldo de ${this.getCounterName(counter)} en $TDL ${newBalances[counter].toLocaleString()}`);
+                this.logOperation(`${this.currentUser ? this.currentUser.name : 'Usuario'} estableció el saldo de ${this.getCounterName(counter)} en $TDL ${newBalances[counter].toLocaleString()}`);
                 this.socket.emit('update_balance', {
                     counter: counter,
                     amount: newBalances[counter],
