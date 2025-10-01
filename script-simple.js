@@ -167,8 +167,8 @@ class AudacityGame {
             this.createActionButton(actionsDiv, '📉 Restar % de mi saldo', 'subtract_percentage', counter);
             
             // Botones de transferencia
-            this.createActionButton(actionsDiv, '🔄 Transferir a otra cuenta', 'transfer', counter);
-            this.createActionButton(actionsDiv, '🏦 Transferir al banco', 'transfer_to_bank', counter);
+            this.createActionButton(actionsDiv, '🔄 Transferir % a otra cuenta', 'transfer', counter);
+            this.createActionButton(actionsDiv, '🏦 Transferir % al banco', 'transfer_to_bank', counter);
 
             // Botones adicionales para admin
             if (this.currentUser.role === 'admin') {
@@ -227,8 +227,8 @@ class AudacityGame {
             case 'transfer':
                 html = `
                     <div class="form-group">
-                        <label for="amount">Monto a transferir:</label>
-                        <input type="number" id="amount" min="0" step="0.01" required>
+                        <label for="percentage">Porcentaje a transferir (1-100):</label>
+                        <input type="number" id="percentage" min="1" max="100" required>
                     </div>
                     <div class="form-group">
                         <label for="targetCounter">Transferir a:</label>
@@ -284,10 +284,10 @@ class AudacityGame {
                 return;
             }
         } else if (action === 'transfer') {
-            amount = parseFloat(document.getElementById('amount').value);
+            percentage = parseFloat(document.getElementById('percentage').value);
             targetCounter = document.getElementById('targetCounter').value;
-            if (isNaN(amount) || amount < 0) {
-                this.showNotification('Monto inválido', 'error');
+            if (isNaN(percentage) || percentage < 1 || percentage > 100) {
+                this.showNotification('Porcentaje inválido (debe ser entre 1 y 100)', 'error');
                 return;
             }
             if (!targetCounter) {

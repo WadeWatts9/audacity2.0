@@ -231,10 +231,10 @@ io.on('connection', (socket) => {
                     operationDescription = `Restó ${percentage}% (${subtractPercentageAmount}) de su saldo de ${counter}`;
                     break;
                 case 'transfer':
-                    const transferAmount = Math.min(amount, newBalances[counter]);
+                    const transferAmount = (newBalances[counter] * percentage) / 100;
                     newBalances[counter] -= transferAmount;
                     newBalances[targetCounter] += transferAmount;
-                    operationDescription = `Transfirió $TDL ${transferAmount} de ${counter} a ${targetCounter}`;
+                    operationDescription = `Transfirió ${percentage}% (${transferAmount}) de ${counter} a ${targetCounter}`;
                     break;
                 case 'transfer_to_bank':
                     const transferToBankAmount = (newBalances[counter] * percentage) / 100;
