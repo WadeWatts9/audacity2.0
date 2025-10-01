@@ -84,6 +84,16 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+#loginScreen .login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    width: 100%;
+}
+
 #loginScreen[style*="display: none"] {
     display: none !important;
 }
@@ -164,9 +174,12 @@ body {
 .login-footer {
     margin-top: 30px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
     width: 100%;
+    position: relative;
+    z-index: 10;
+    padding: 10px 0;
 }
 
 .login-footer a {
