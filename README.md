@@ -453,7 +453,7 @@ sudo systemctl restart nginx
 **Alan Canto**
 - **LinkedIn**: [linkedin.com/in/alancanto](https://www.linkedin.com/in/alancanto)
 - **GitHub**: [github.com/WadeWatts9](https://github.com/WadeWatts9)
-- **Email**: [Contacto disponible en LinkedIn]
+- **Email**: [soy@alancanto.net]
 
 ---
 
