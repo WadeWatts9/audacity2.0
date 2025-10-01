@@ -15,6 +15,21 @@ body {
 }
 
 /* Login Screen */
+#loginScreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
+
 .login-container {
     display: flex;
     flex-direction: column;
@@ -33,6 +48,48 @@ body {
     text-align: center;
     max-width: 400px;
     width: 100%;
+    margin: 0 auto;
+}
+
+/* Asegurar que los formularios estén centrados */
+#loginForm {
+    text-align: center;
+    width: 100%;
+}
+
+#loginForm .form-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+#loginForm .form-group input {
+    text-align: left;
+    width: 100%;
+}
+
+/* Asegurar que la pantalla de login se muestre correctamente */
+#loginScreen {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#loginScreen[style*="display: none"] {
+    display: none !important;
+}
+
+#loginScreen[style*="display: block"] {
+    display: flex !important;
 }
 
 .login-box h1 {
@@ -118,6 +175,11 @@ body {
 }
 
 /* Game Container */
+#gameScreen {
+    min-height: 100vh;
+    padding: 20px;
+}
+
 .game-container {
     min-height: 100vh;
     padding: 20px;
